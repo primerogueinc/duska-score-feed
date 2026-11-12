@@ -1,0 +1,11 @@
+# duska.si proof manifest, version 1
+repo: primerogueinc/duska-score-feed
+commit: d37d67940d048f7baec35041c872f931d005dbd1
+parent: none
+commit_time: 2026-11-12T23:24:08Z
+subject: Initial commit
+tree: 2c20b3a8523915ee7cc8d40f160c7ca856821c8d
+files: 1
+hash: SHA-256 of each file's content as git stores it, sorted by path (byte order)
+---
+b272ac5c32174d63ab086e7d2c8e9764e69def8e2da4e289b1ce10da5ab8838f  README.md

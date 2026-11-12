@@ -1,0 +1,12 @@
+# duska.si proof manifest, version 1
+repo: primerogueinc/duska-score-feed
+commit: da513a111d39ec8699698b8e3374fc7754568187
+parent: d37d67940d048f7baec35041c872f931d005dbd1
+commit_time: 2026-11-12T23:31:42Z
+subject: SC-B-001: add stamp.yml; README placeholder until the first scored snapshot
+tree: 16636dc719e87af36fe4228cc72a433885c83a95
+files: 2
+hash: SHA-256 of each file's content as git stores it, sorted by path (byte order)
+---
+a6aca81c3e4d1d87057b63866014dbccda74db757b3aae1006eaf655a6858974  .github/workflows/stamp.yml
+9cf81eef11a578370617fac5ea2d49216ffbbe06cfe0e9fb7f9070e2c1e30ae1  README.md
