@@ -1,0 +1,269 @@
+# stamp.yml: hash every commit on main and anchor the hash to Bitcoin.
+#
+# Written by the Site agent for the duska.si experiment. Copy this file,
+# unchanged, to .github/workflows/stamp.yml in your own repo. It needs no
+# settings, secrets or accounts. The same file is served at https://duska.si/stamp.yml
+#
+# On every push to main:
+#   1. for each commit on main that has no manifest yet, write one: repo,
+#      commit, parent, commit time, then the SHA-256 of every tracked file,
+#      sorted by path;
+#   2. stamp the manifests with OpenTimestamps (ots stamp);
+#   3. commit each manifest and its .ots proof to the `proofs` branch as
+#      proofs/<UTC date of the commit>_<short commit>.manifest and .manifest.ots
+# After every stamp, and every six hours: run `ots upgrade` on proofs that are
+# still pending and commit the upgraded files.
+#
+# Version 2 (12 Nov 2026): the upgrade now also runs on every push, so pending
+# proofs are completed by the next push even where GitHub does not start the
+# schedule.
+#
+# The proofs show that these exact files existed no later than a given
+# Bitcoin block. They do not show who wrote them.
+
+name: Stamp
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proofs-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  OTS_CLIENT: opentimestamps-client==0.8.0
+
+jobs:
+  stamp:
+    name: Write and stamp manifests
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out main with its history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the OpenTimestamps client
+        run: pip install --quiet "$OTS_CLIENT" && ots --version
+
+      - name: Open the proofs branch
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin proofs >/dev/null 2>&1; then
+            git fetch --quiet origin proofs
+            git worktree add --quiet -B proofs ../proofs origin/proofs
+          else
+            git worktree add --quiet --detach ../proofs
+            cd ../proofs
+            git checkout --quiet --orphan proofs
+            git rm -rfq . >/dev/null 2>&1 || true
+            mkdir -p proofs
+            {
+              echo "# Proofs"
+              echo
+              echo "Written by .github/workflows/stamp.yml. One manifest and one OpenTimestamps proof for every commit on main of $GITHUB_REPOSITORY."
+              echo
+              echo "Check one: ots verify proofs/NAME.manifest.ots (pip install opentimestamps-client), or drop the manifest and its .ots file on opentimestamps.org."
+              echo "Check a manifest against the repo: git checkout the commit it names, then sha256sum any file and compare with its line."
+            } > README.md
+          fi
+
+      - name: Write a manifest for every commit that has none
+        id: manifests
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, os, subprocess
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          out_dir = os.path.join("..", "proofs", "proofs")
+          os.makedirs(out_dir, exist_ok=True)
+
+          def git(*args, binary=False):
+              raw = subprocess.run(["git", *args], check=True, capture_output=True).stdout
+              return raw if binary else raw.decode("utf-8", "replace")
+
+          done = set()
+          for name in os.listdir(out_dir):
+              if name.endswith(".manifest"):
+                  with open(os.path.join(out_dir, name), encoding="utf-8", errors="replace") as f:
+                      for line in f:
+                          if line.startswith("commit: "):
+                              done.add(line.split()[1])
+                          if line.strip() == "---":
+                              break
+
+          new = []
+          for commit in git("rev-list", "--first-parent", "--reverse", "HEAD").split():
+              if commit in done:
+                  continue
+              ctime, subject, tree, parents = git("show", "-s", "--format=%ct%n%s%n%T%n%P", commit).split("\n")[:4]
+              when = subprocess.run(["date", "-u", "-d", "@" + ctime, "+%Y-%m-%dT%H:%M:%SZ"], check=True, capture_output=True, text=True).stdout.strip()
+              rows = []
+              listing = git("ls-tree", "-r", "-z", commit, binary=True)
+              for entry in listing.split(b"\0"):
+                  if not entry:
+                      continue
+                  meta, path = entry.split(b"\t", 1)
+                  mode, kind, obj = meta.decode().split()
+                  if kind == "blob":
+                      digest = hashlib.sha256(git("cat-file", "blob", obj, binary=True)).hexdigest()
+                  else:                       # a submodule: record the commit it points at
+                      digest = "gitlink:" + obj
+                  rows.append((path, digest))
+              rows.sort(key=lambda r: r[0])
+              lines = [
+                  "# duska.si proof manifest, version 1",
+                  "repo: " + repo,
+                  "commit: " + commit,
+                  "parent: " + (parents.strip() or "none"),
+                  "commit_time: " + when,
+                  "subject: " + subject,
+                  "tree: " + tree,
+                  "files: %d" % len(rows),
+                  "hash: SHA-256 of each file's content as git stores it, sorted by path (byte order)",
+                  "---",
+              ]
+              body = "\n".join(lines).encode("utf-8") + b"\n"
+              for path, digest in rows:
+                  shown = path.replace(b"\\", b"\\\\").replace(b"\n", b"\\n")
+                  body += digest.encode() + b"  " + shown + b"\n"
+              name = "%s_%s.manifest" % (when[:10], commit[:10])
+              with open(os.path.join(out_dir, name), "wb") as f:
+                  f.write(body)
+              new.append(name)
+              print("manifest %s  sha256 %s  (%d files)  %s" % (name, hashlib.sha256(body).hexdigest(), len(rows), subject))
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("count=%d\n" % len(new))
+          with open(os.path.join("..", "new-manifests.txt"), "w") as f:
+              f.write("".join(n + "\n" for n in new))
+          print("%d new manifest(s); %d commit(s) already had one" % (len(new), len(done)))
+          PY
+
+      - name: Stamp the new manifests
+        if: steps.manifests.outputs.count != '0'
+        working-directory: ../proofs/proofs
+        run: |
+          set -euo pipefail
+          mapfile -t files < ../../new-manifests.txt
+          ok=0
+          for attempt in 1 2 3 4; do
+            if ots stamp --timeout 30 "${files[@]}"; then ok=1; break; fi
+            echo "ots stamp failed (attempt $attempt); waiting before another try"
+            for f in "${files[@]}"; do rm -f "$f.ots"; done
+            sleep $((attempt * 20))
+          done
+          if [ "$ok" != 1 ]; then
+            echo "::error::The OpenTimestamps calendars could not be reached. Nothing was committed; the next run will try again."
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            test -s "$f.ots"
+            echo "----- $f.ots"
+            ots info "$f.ots"
+          done
+
+      - name: Commit the manifests and proofs to the proofs branch
+        if: steps.manifests.outputs.count != '0'
+        working-directory: ../proofs
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit --quiet -m "Stamp $(wc -l < ../new-manifests.txt | tr -d ' ') commit(s) of main up to ${GITHUB_SHA::10}"
+          for attempt in 1 2 3; do
+            if git push --quiet origin proofs; then break; fi
+            git pull --quiet --rebase origin proofs
+          done
+          git log --oneline -1
+          {
+            echo "### Stamped"
+            echo
+            echo '```'
+            cat ../new-manifests.txt
+            echo '```'
+            echo "Proofs are pending until the calendar's transaction is in a Bitcoin block, usually within a few hours."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  upgrade:
+    name: Upgrade pending proofs
+    needs: stamp
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Look for a proofs branch
+        id: has
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git ls-remote --exit-code --heads "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" proofs >/dev/null 2>&1; then
+            echo "proofs=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "proofs=no" >> "$GITHUB_OUTPUT"
+            echo "No proofs branch yet; nothing to upgrade."
+          fi
+
+      - name: Check out the proofs branch
+        if: steps.has.outputs.proofs == 'yes'
+        uses: actions/checkout@v4
+        with:
+          ref: proofs
+
+      - name: Set up Python
+        if: steps.has.outputs.proofs == 'yes'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade
+        if: steps.has.outputs.proofs == 'yes'
+        run: |
+          set -uo pipefail
+          pip install --quiet "$OTS_CLIENT"
+          pending=0; complete=0; upgraded=0
+          shopt -s nullglob
+          for f in proofs/*.ots; do
+            if ots info "$f" 2>/dev/null | grep -q "BitcoinBlockHeaderAttestation"; then
+              complete=$((complete + 1))
+              continue
+            fi
+            echo "----- upgrading $f"
+            ots upgrade "$f" || true
+            rm -f "$f.bak"
+            if ots info "$f" 2>/dev/null | grep -q "BitcoinBlockHeaderAttestation"; then
+              upgraded=$((upgraded + 1))
+              ots info "$f" | grep "BitcoinBlockHeaderAttestation"
+            else
+              pending=$((pending + 1))
+            fi
+          done
+          echo "complete before this run: $complete; upgraded now: $upgraded; still pending: $pending"
+          echo "Complete before this run: $complete. Upgraded now: $upgraded. Still pending: $pending." >> "$GITHUB_STEP_SUMMARY"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A proofs
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit --quiet -m "Upgrade $upgraded proof(s) to a Bitcoin block attestation"
+            git push --quiet origin proofs
+            git log --oneline -1
+          fi
