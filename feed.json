@@ -1,0 +1,249 @@
+{
+ "feed": "duska-score-feed",
+ "schema": 1,
+ "explained_in": "README.md",
+ "rows": [
+  {
+   "row": 1,
+   "kind": "snapshot",
+   "batch": "SC-B-003",
+   "scored_at_utc": "2026-11-13T01:35:22Z",
+   "rubric_version": 5,
+   "rubric_commit": "3938b7c4ac0dfa0d0418a7cb3bd34d22e3bcae55",
+   "ledger_version": 23,
+   "scope": "direct line: Ahn 1, 2, 4, 8, 9 and every ancestor of Ahn 8 and Ahn 9",
+   "ai_commits": {
+    "primerogueinc/genealogu-duska-1": "9462513e7d89dad1f6cf63980ed6171666adb53b",
+    "primerogueinc/genealogy-demko-1": "f1bbdcffadc8f22e5c2e920ab084096e31e3ef6c"
+   },
+   "reference": {
+    "tree_files": 1,
+    "tree_files_sha256": [
+     "7a16419fd6865d4934b8ae09275044877cb9cc9a314ccd71eb92f1895dd278ab"
+    ],
+    "facts_headline": 27,
+    "facts_exact_date": 8,
+    "facts_headline_by_tier": {
+     "A": 0,
+     "B": 27,
+     "C": 0
+    }
+   },
+   "main_measure": "tiers A and B together: tier A holds fewer than twenty facts",
+   "headline": {
+    "withheld": 0,
+    "all_facts": {
+     "all_tiers": {
+      "facts": 27,
+      "match": 26,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.963,
+      "agreement": 1.0
+     },
+     "tier_A": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     },
+     "tier_B": {
+      "facts": 27,
+      "match": 26,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.963,
+      "agreement": 1.0
+     },
+     "tier_C": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     }
+    },
+    "without_given_or_contaminated": {
+     "all_tiers": {
+      "facts": 12,
+      "match": 11,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.9167,
+      "agreement": 1.0
+     },
+     "tier_A": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     },
+     "tier_B": {
+      "facts": 12,
+      "match": 11,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.9167,
+      "agreement": 1.0
+     },
+     "tier_C": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     }
+    },
+    "removed_as_given": 15,
+    "removed_as_contaminated": 0,
+    "conflicts_on_tier_B_or_C": 0
+   },
+   "exact_dates": {
+    "withheld": 2,
+    "all_facts": {
+     "all_tiers": {
+      "facts": 6,
+      "match": 4,
+      "near_match": 0,
+      "conflict": 1,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.6667,
+      "agreement": 0.8
+     },
+     "tier_A": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     },
+     "tier_B": {
+      "facts": 6,
+      "match": 4,
+      "near_match": 0,
+      "conflict": 1,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.6667,
+      "agreement": 0.8
+     },
+     "tier_C": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     }
+    },
+    "without_given_or_contaminated": {
+     "all_tiers": {
+      "facts": 6,
+      "match": 4,
+      "near_match": 0,
+      "conflict": 1,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.6667,
+      "agreement": 0.8
+     },
+     "tier_A": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     },
+     "tier_B": {
+      "facts": 6,
+      "match": 4,
+      "near_match": 0,
+      "conflict": 1,
+      "missing": 1,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": 0.6667,
+      "agreement": 0.8
+     },
+     "tier_C": {
+      "facts": 0,
+      "match": 0,
+      "near_match": 0,
+      "conflict": 0,
+      "missing": 0,
+      "not_comparable": 0,
+      "matches_one_version": 0,
+      "coverage": null,
+      "agreement": null
+     }
+    },
+    "removed_as_given": 0,
+    "removed_as_contaminated": 0,
+    "conflicts_on_tier_B_or_C": 1
+   },
+   "extras": {
+    "headline": 58,
+    "exact_dates": 9,
+    "headline_by_proof_level": {
+     "documented": 52,
+     "inferred": 6,
+     "stated": 0
+    }
+   },
+   "by_generation": null,
+   "by_generation_note": "Held back. In this scope three of the four generations are one person each, so a number by generation would be a per-person result. The breakdown is in the private results file.",
+   "family_groups": {
+    "reference_facts": 0,
+    "scored": false
+   },
+   "results_sha256": "eb0ffb9519109bf90f27d1acbdfa3ea6da9a5859347c3d143e5eb2432df247a5",
+   "corrects_row": null,
+   "reason": null
+  }
+ ]
+}
