@@ -1,0 +1,13 @@
+# duska.si proof manifest, version 1
+repo: primerogueinc/duska-score-feed
+commit: b45fc67e9a57d5b5c9154149cfd41dce5ccf091b
+parent: da513a111d39ec8699698b8e3374fc7754568187
+commit_time: 2026-11-13T01:35:45Z
+subject: SC-B-003: feed row 1, first scored snapshot (rubric v5); README explains the fields
+tree: 83a92eeaafc498c6bb9ce40d3a4c23acddea0620
+files: 3
+hash: SHA-256 of each file's content as git stores it, sorted by path (byte order)
+---
+a6aca81c3e4d1d87057b63866014dbccda74db757b3aae1006eaf655a6858974  .github/workflows/stamp.yml
+2ff01f2272789de89a66e1da61b63100615689d6034da155f53dd4f78dc83225  README.md
+48e787ceb17ecdb10297c0b17303d794a9955a2af3f6164bf83e879d8b8e30bd  feed.json
